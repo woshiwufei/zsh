@@ -103,6 +103,7 @@
             padding: 20px;
             margin: 20px 0;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
         }
 
         .track-header {
@@ -172,6 +173,25 @@
         .record-btn.recording {
             background: #ff4757;
             animation: pulse 1s infinite;
+        }
+
+        .track-play-btn {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.9em;
+        }
+
+        .track-play-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .track-play-btn.playing {
+            background: #43e97b;
         }
 
         @keyframes pulse {
@@ -398,9 +418,9 @@
         </div>
 
         <div class="controls">
-            <button class="control-btn play-btn" id="playBtn">▶ 播放</button>
-            <button class="control-btn pause-btn" id="pauseBtn">⏸ 暂停</button>
-            <button class="control-btn stop-btn" id="stopBtn">⏹ 停止</button>
+            <button class="control-btn play-btn" id="playBtn">▶ 播放全部</button>
+            <button class="control-btn pause-btn" id="pauseBtn">⏸ 暂停全部</button>
+            <button class="control-btn stop-btn" id="stopBtn">⏹ 停止全部</button>
         </div>
 
         <div class="status" id="status">请加载音频文件或录制音频</div>
@@ -423,6 +443,13 @@
         let dragStartX = [0, 0, 0];
         let dragStartDelay = [0, 0, 0];
         let trackCount = 1;
+        
+        // 用于独立音轨播放的变量
+        let trackSources = [null, null, null];
+        let isTrackPlaying = [false, false, false];
+        let trackAnimationIds = [null, null, null];
+        let trackStartTimes = [0, 0, 0];
+        let trackPauseTimes = [0, 0, 0];
 
         const playBtn = document.getElementById('playBtn');
         const pauseBtn = document.getElementById('pauseBtn');
@@ -482,6 +509,7 @@
                             <label for="file${trackNum}" class="file-label">📁 选择文件</label>
                         </div>
                         <button class="record-btn" data-track="${trackNum}">🎤 录音</button>
+                        <button class="track-play-btn" data-track="${trackNum}">▶ 播放本轨</button>
                     </div>
                 </div>
                 <div class="track-info" id="trackInfo${trackNum}">未加载</div>
@@ -505,6 +533,7 @@
             const canvas = document.getElementById(`waveform${trackNum}`);
             const container = document.getElementById(`waveformContainer${trackNum}`);
             const playbackLine = document.getElementById(`playbackLine${trackNum}`);
+            const trackPlayBtn = document.querySelector(`.track-play-btn[data-track="${trackNum}"]`);
             
             waveformCanvases[index] = canvas;
             playbackLines[index] = playbackLine;
@@ -537,6 +566,9 @@
             // 录音按钮
             const recordBtn = document.querySelector(`[data-track="${trackNum}"]`);
             recordBtn.addEventListener('click', () => toggleRecording(trackNum, index, recordBtn));
+            
+            // 独立音轨播放按钮
+            trackPlayBtn.addEventListener('click', () => toggleTrackPlay(trackNum, index, trackPlayBtn));
             
             // 初始化canvas尺寸
             resizeCanvas(canvas);
@@ -626,6 +658,63 @@
                     console.error('录音失败:', err);
                     status.textContent = '无法访问麦克风';
                 }
+            }
+        }
+
+        // 切换独立音轨播放状态
+        function toggleTrackPlay(trackNum, index, btn) {
+            if (isTrackPlaying[index]) {
+                // 停止播放
+                if (trackSources[index]) {
+                    trackSources[index].stop();
+                    trackSources[index] = null;
+                }
+                isTrackPlaying[index] = false;
+                btn.textContent = '▶ 播放本轨';
+                btn.classList.remove('playing');
+                playbackLines[index].style.display = 'none';
+                cancelAnimationFrame(trackAnimationIds[index]);
+                status.textContent = `音轨${trackNum}已停止`;
+            } else {
+                // 开始播放
+                if (!audioBuffers[index]) {
+                    status.textContent = `音轨${trackNum}没有音频内容`;
+                    return;
+                }
+                
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
+                const offset = trackPauseTimes[index];
+                trackStartTimes[index] = audioContext.currentTime - offset;
+                
+                const effectiveDelay = delays[index];
+                const startOffset = Math.max(0, -effectiveDelay);
+                const when = Math.max(0, effectiveDelay);
+                
+                trackSources[index] = audioContext.createBufferSource();
+                trackSources[index].buffer = audioBuffers[index];
+                trackSources[index].connect(audioContext.destination);
+                trackSources[index].start(audioContext.currentTime + when, offset + startOffset);
+                
+                isTrackPlaying[index] = true;
+                btn.textContent = '⏹ 停止本轨';
+                btn.classList.add('playing');
+                playbackLines[index].style.display = 'block';
+                
+                status.textContent = `正在播放音轨${trackNum}...`;
+                updateTrackProgress(index, trackNum);
+                
+                // 设置播放结束回调
+                trackSources[index].onended = () => {
+                    isTrackPlaying[index] = false;
+                    btn.textContent = '▶ 播放本轨';
+                    btn.classList.remove('playing');
+                    playbackLines[index].style.display = 'none';
+                    trackPauseTimes[index] = 0;
+                    status.textContent = `音轨${trackNum}播放完毕`;
+                };
             }
         }
 
@@ -879,6 +968,34 @@
             }
 
             animationId = requestAnimationFrame(updateProgress);
+        }
+
+        // 更新独立音轨的播放进度
+        function updateTrackProgress(index, trackNum) {
+            if (!isTrackPlaying[index]) return;
+
+            const currentTime = audioContext.currentTime - trackStartTimes[index];
+            const bufferDuration = audioBuffers[index].duration;
+
+            // 更新播放线位置
+            if (playbackLines[index]) {
+                const adjustedTime = currentTime - delays[index];
+                const percent = (adjustedTime / bufferDuration) * 100;
+                playbackLines[index].style.left = Math.max(0, Math.min(100, percent)) + '%';
+            }
+
+            if (currentTime >= bufferDuration) {
+                // 播放结束
+                isTrackPlaying[index] = false;
+                document.querySelector(`.track-play-btn[data-track="${trackNum}"]`).textContent = '▶ 播放本轨';
+                document.querySelector(`.track-play-btn[data-track="${trackNum}"]`).classList.remove('playing');
+                playbackLines[index].style.display = 'none';
+                trackPauseTimes[index] = 0;
+                status.textContent = `音轨${trackNum}播放完毕`;
+                return;
+            }
+
+            trackAnimationIds[index] = requestAnimationFrame(() => updateTrackProgress(index, trackNum));
         }
 
         function formatTime(seconds) {
