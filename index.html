@@ -194,6 +194,26 @@
             background: #43e97b;
         }
 
+        .track-download-btn {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.9em;
+        }
+
+        .track-download-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .track-download-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -421,6 +441,7 @@
             <button class="control-btn play-btn" id="playBtn">▶ 播放全部</button>
             <button class="control-btn pause-btn" id="pauseBtn">⏸ 暂停全部</button>
             <button class="control-btn stop-btn" id="stopBtn">⏹ 停止全部</button>
+            <button class="control-btn stop-btn" id="downloadMergedBtn" disabled>⬇️ 下载融合音频</button>
         </div>
 
         <div class="status" id="status">请加载音频文件或录制音频</div>
@@ -430,7 +451,7 @@
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioBuffers = [null, null, null];
         let audioSources = [null, null, null];
-        let delays = [0, 0, 0]; // 延迟值（秒）
+        let delays = [0, 0, 0];
         let startTime = 0;
         let pauseTime = 0;
         let isPlaying = false;
@@ -444,7 +465,6 @@
         let dragStartDelay = [0, 0, 0];
         let trackCount = 1;
         
-        // 用于独立音轨播放的变量
         let trackSources = [null, null, null];
         let isTrackPlaying = [false, false, false];
         let trackAnimationIds = [null, null, null];
@@ -454,15 +474,14 @@
         const playBtn = document.getElementById('playBtn');
         const pauseBtn = document.getElementById('pauseBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const downloadMergedBtn = document.getElementById('downloadMergedBtn');
         const status = document.getElementById('status');
         const currentTimeEl = document.getElementById('currentTime');
         const durationEl = document.getElementById('duration');
         const tracksContainer = document.getElementById('tracksContainer');
 
-        // 创建初始音轨
         createTracks(trackCount);
 
-        // 音轨数量选择事件
         document.querySelectorAll('.track-count-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.track-count-btn').forEach(b => b.classList.remove('active'));
@@ -473,17 +492,14 @@
         });
 
         function createTracks(count) {
-            // 停止所有播放
             stopBtn.click();
             
-            // 清空容器
             tracksContainer.innerHTML = '';
             audioBuffers = [null, null, null];
             delays = [0, 0, 0];
             waveformCanvases = [];
             playbackLines = [];
             
-            // 创建指定数量的音轨
             for (let i = 1; i <= count; i++) {
                 createTrack(i);
             }
@@ -510,11 +526,12 @@
                         </div>
                         <button class="record-btn" data-track="${trackNum}">🎤 录音</button>
                         <button class="track-play-btn" data-track="${trackNum}">▶ 播放本轨</button>
+                        <button class="track-download-btn" data-track="${trackNum}" disabled>⬇️ 下载</button>
                     </div>
                 </div>
                 <div class="track-info" id="trackInfo${trackNum}">未加载</div>
                 <div class="delay-control">
-                    <span class="delay-label">时间偏移：</span>
+                    <span class="delay-label">时间偏移:</span>
                     <input type="range" class="delay-input" id="delay${trackNum}" min="-10" max="10" step="0.01" value="0">
                     <span class="delay-value" id="delayValue${trackNum}">0.00 秒</span>
                 </div>
@@ -526,7 +543,6 @@
             
             tracksContainer.appendChild(trackDiv);
             
-            // 设置事件监听
             const fileInput = document.getElementById(`file${trackNum}`);
             const delayInput = document.getElementById(`delay${trackNum}`);
             const delayValue = document.getElementById(`delayValue${trackNum}`);
@@ -538,7 +554,6 @@
             waveformCanvases[index] = canvas;
             playbackLines[index] = playbackLine;
             
-            // 文件加载
             fileInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (file) {
@@ -546,14 +561,12 @@
                 }
             });
             
-            // 延迟控制
             delayInput.addEventListener('input', (e) => {
                 delays[index] = parseFloat(e.target.value);
                 delayValue.textContent = delays[index].toFixed(2) + ' 秒';
                 drawWaveform(index);
             });
             
-            // 波形拖动
             container.addEventListener('mousedown', (e) => startDrag(e, index, container));
             container.addEventListener('touchstart', (e) => startDrag(e.touches[0], index, container));
             
@@ -563,14 +576,14 @@
             document.addEventListener('mouseup', () => endDrag(index));
             document.addEventListener('touchend', () => endDrag(index));
             
-            // 录音按钮
             const recordBtn = document.querySelector(`[data-track="${trackNum}"]`);
             recordBtn.addEventListener('click', () => toggleRecording(trackNum, index, recordBtn));
             
-            // 独立音轨播放按钮
             trackPlayBtn.addEventListener('click', () => toggleTrackPlay(trackNum, index, trackPlayBtn));
             
-            // 初始化canvas尺寸
+            const trackDownloadBtn = document.querySelector(`.track-download-btn[data-track="${trackNum}"]`);
+            trackDownloadBtn.addEventListener('click', () => downloadTrack(trackNum, index));
+            
             resizeCanvas(canvas);
         }
 
@@ -605,6 +618,157 @@
             } catch (error) {
                 console.error('加载音频失败:', error);
                 status.textContent = `加载音轨${trackNum}失败`;
+            }
+        }
+
+        async function downloadTrack(trackNum, index) {
+            if (!audioBuffers[index]) return;
+            
+            try {
+                status.textContent = `正在准备下载音轨${trackNum}...`;
+                
+                const wavBlob = audioBufferToWav(audioBuffers[index]);
+                
+                const url = URL.createObjectURL(wavBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `音轨${trackNum}_${new Date().getTime()}.wav`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                status.textContent = `音轨${trackNum}下载成功!`;
+            } catch (error) {
+                console.error('下载失败:', error);
+                status.textContent = `音轨${trackNum}下载失败`;
+            }
+        }
+
+        async function downloadMergedAudio() {
+            const loadedBuffers = audioBuffers.slice(0, trackCount).filter(b => b !== null);
+            if (loadedBuffers.length === 0) return;
+            
+            try {
+                status.textContent = '正在融合音频...';
+                
+                let maxDuration = 0;
+                for (let i = 0; i < trackCount; i++) {
+                    if (audioBuffers[i]) {
+                        const effectiveDelay = delays[i];
+                        const trackEndTime = effectiveDelay >= 0 
+                            ? audioBuffers[i].duration + effectiveDelay 
+                            : audioBuffers[i].duration - Math.abs(effectiveDelay);
+                        maxDuration = Math.max(maxDuration, trackEndTime);
+                    }
+                }
+                
+                const offlineContext = new OfflineAudioContext(
+                    2,
+                    Math.ceil(maxDuration * audioContext.sampleRate),
+                    audioContext.sampleRate
+                );
+                
+                for (let i = 0; i < trackCount; i++) {
+                    if (audioBuffers[i]) {
+                        const source = offlineContext.createBufferSource();
+                        source.buffer = audioBuffers[i];
+                        source.connect(offlineContext.destination);
+                        
+                        const effectiveDelay = delays[i];
+                        
+                        if (effectiveDelay >= 0) {
+                            source.start(effectiveDelay);
+                        } else {
+                            const startOffset = Math.abs(effectiveDelay);
+                            source.start(0, startOffset);
+                        }
+                    }
+                }
+                
+                const renderedBuffer = await offlineContext.startRendering();
+                
+                const wavBlob = audioBufferToWav(renderedBuffer);
+                
+                const url = URL.createObjectURL(wavBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `融合音频_${new Date().getTime()}.wav`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                status.textContent = '融合音频下载成功!';
+            } catch (error) {
+                console.error('融合音频失败:', error);
+                status.textContent = '融合音频下载失败';
+            }
+        }
+
+        function audioBufferToWav(buffer) {
+            const numberOfChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = 1;
+            const bitDepth = 16;
+            
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numberOfChannels * bytesPerSample;
+            
+            const data = [];
+            for (let i = 0; i < numberOfChannels; i++) {
+                data.push(buffer.getChannelData(i));
+            }
+            
+            const interleaved = interleave(data);
+            const dataLength = interleaved.length * bytesPerSample;
+            const headerLength = 44;
+            const totalLength = headerLength + dataLength;
+            
+            const arrayBuffer = new ArrayBuffer(totalLength);
+            const view = new DataView(arrayBuffer);
+            
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, totalLength - 8, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numberOfChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataLength, true);
+            
+            let offset = 44;
+            for (let i = 0; i < interleaved.length; i++) {
+                const sample = Math.max(-1, Math.min(1, interleaved[i]));
+                view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                offset += 2;
+            }
+            
+            return new Blob([arrayBuffer], { type: 'audio/wav' });
+        }
+
+        function interleave(channelData) {
+            const length = channelData[0].length;
+            const numberOfChannels = channelData.length;
+            const result = new Float32Array(length * numberOfChannels);
+            
+            for (let i = 0; i < length; i++) {
+                for (let channel = 0; channel < numberOfChannels; channel++) {
+                    result[i * numberOfChannels + channel] = channelData[channel][i];
+                }
+            }
+            
+            return result;
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
             }
         }
 
@@ -661,10 +825,8 @@
             }
         }
 
-        // 切换独立音轨播放状态
         function toggleTrackPlay(trackNum, index, btn) {
             if (isTrackPlaying[index]) {
-                // 停止播放
                 if (trackSources[index]) {
                     trackSources[index].stop();
                     trackSources[index] = null;
@@ -676,7 +838,6 @@
                 cancelAnimationFrame(trackAnimationIds[index]);
                 status.textContent = `音轨${trackNum}已停止`;
             } else {
-                // 开始播放
                 if (!audioBuffers[index]) {
                     status.textContent = `音轨${trackNum}没有音频内容`;
                     return;
@@ -706,7 +867,6 @@
                 status.textContent = `正在播放音轨${trackNum}...`;
                 updateTrackProgress(index, trackNum);
                 
-                // 设置播放结束回调
                 trackSources[index].onended = () => {
                     isTrackPlaying[index] = false;
                     btn.textContent = '▶ 播放本轨';
@@ -742,7 +902,6 @@
             
             ctx.clearRect(0, 0, width, height);
             
-            // 绘制中线
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -750,7 +909,6 @@
             ctx.lineTo(width, height / 2);
             ctx.stroke();
             
-            // 绘制波形
             const colors = ['#f093fb', '#4facfe', '#43e97b'];
             const gradient = ctx.createLinearGradient(0, 0, 0, height);
             gradient.addColorStop(0, colors[index] + 'aa');
@@ -796,7 +954,6 @@
             ctx.fill();
             ctx.stroke();
             
-            // 显示延迟标记
             const delay = delays[index];
             if (delay !== 0) {
                 const delayX = (delay / buffer.duration) * width;
@@ -837,7 +994,6 @@
             
             delays[index] = Math.max(-10, Math.min(10, dragStartDelay[index] + deltaTime));
             
-            // 更新对应的滑块和显示值
             document.getElementById(`delay${index + 1}`).value = delays[index];
             document.getElementById(`delayValue${index + 1}`).textContent = 
                 delays[index].toFixed(2) + ' 秒';
@@ -855,8 +1011,16 @@
         function updateStatus() {
             const loaded = audioBuffers.slice(0, trackCount).filter(b => b !== null).length;
             if (loaded > 0) {
-                status.textContent = `✓ ${loaded}个音轨已就绪，可以播放`;
+                status.textContent = `✓ ${loaded}个音轨已就绪,可以播放`;
                 playBtn.disabled = false;
+                downloadMergedBtn.disabled = false;
+                
+                for (let i = 0; i < trackCount; i++) {
+                    const downloadBtn = document.querySelector(`.track-download-btn[data-track="${i + 1}"]`);
+                    if (downloadBtn) {
+                        downloadBtn.disabled = !audioBuffers[i];
+                    }
+                }
                 
                 const maxDuration = Math.max(...audioBuffers.slice(0, trackCount).map((b, i) => 
                     b ? b.duration + Math.max(0, delays[i]) : 0
@@ -865,6 +1029,7 @@
             } else {
                 status.textContent = '请加载音频文件或录制音频';
                 playBtn.disabled = true;
+                downloadMergedBtn.disabled = true;
                 durationEl.textContent = '00:00';
             }
         }
@@ -942,6 +1107,8 @@
             cancelAnimationFrame(animationId);
         });
 
+        downloadMergedBtn.addEventListener('click', downloadMergedAudio);
+
         function updateProgress() {
             if (!isPlaying) return;
 
@@ -953,7 +1120,6 @@
 
             currentTimeEl.textContent = formatTime(currentTime);
 
-            // 更新播放线位置
             for (let i = 0; i < trackCount; i++) {
                 if (audioBuffers[i] && playbackLines[i]) {
                     const adjustedTime = currentTime - delays[i];
@@ -970,14 +1136,12 @@
             animationId = requestAnimationFrame(updateProgress);
         }
 
-        // 更新独立音轨的播放进度
         function updateTrackProgress(index, trackNum) {
             if (!isTrackPlaying[index]) return;
 
             const currentTime = audioContext.currentTime - trackStartTimes[index];
             const bufferDuration = audioBuffers[index].duration;
 
-            // 更新播放线位置
             if (playbackLines[index]) {
                 const adjustedTime = currentTime - delays[index];
                 const percent = (adjustedTime / bufferDuration) * 100;
@@ -985,7 +1149,6 @@
             }
 
             if (currentTime >= bufferDuration) {
-                // 播放结束
                 isTrackPlaying[index] = false;
                 document.querySelector(`.track-play-btn[data-track="${trackNum}"]`).textContent = '▶ 播放本轨';
                 document.querySelector(`.track-play-btn[data-track="${trackNum}"]`).classList.remove('playing');
@@ -1004,7 +1167,6 @@
             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
-        // 初始化状态
         playBtn.disabled = true;
     </script>
 </body>
