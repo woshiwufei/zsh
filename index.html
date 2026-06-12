@@ -55,57 +55,6 @@
             max-width: 600px;
         }
 
-        .config-section {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 30px auto;
-            max-width: 600px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .config-title {
-            color: white;
-            font-size: 1.2em;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .config-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .config-label {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 1em;
-        }
-
-        .track-select {
-            padding: 10px 15px;
-            border-radius: 10px;
-            border: none;
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 1em;
-            cursor: pointer;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s;
-        }
-
-        .track-select:hover {
-            background: rgba(255, 255, 255, 0.4);
-        }
-
-        .track-select option {
-            background: #764ba2;
-            color: white;
-        }
-
         .audio-sources {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -293,10 +242,189 @@
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .track-status {
+        /* AI 评分区域 */
+        .ai-score-section {
+            margin: 40px auto;
+            max-width: 800px;
+            padding: 0 20px;
+        }
+
+        .ai-score-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            font-size: 1.15em;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            box-shadow: 0 6px 20px rgba(37, 117, 252, 0.35);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-score-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(37, 117, 252, 0.5);
+        }
+
+        .ai-score-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ai-score-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            to { left: 100%; }
+        }
+
+        .ai-score-result {
+            margin-top: 25px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 30px;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .ai-score-result.visible {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .score-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .score-header h3 {
+            color: #fff;
+            font-size: 1.3em;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .score-total {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .score-total .number {
+            font-size: 2.8em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        .score-total .unit {
+            font-size: 1em;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .score-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .score-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .score-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .score-item .label {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        .score-item .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .score-item .bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 3px;
             margin-top: 10px;
-            font-size: 0.9em;
-            color: rgba(255, 255, 255, 0.8);
+            overflow: hidden;
+        }
+
+        .score-item .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.8s ease-out;
+        }
+
+        .score-comment {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 20px;
+            color: rgba(255,255,255,0.9);
+            line-height: 1.8;
+            font-size: 0.95em;
+            border-left: 3px solid rgba(255, 210, 0, 0.6);
+        }
+
+        .score-comment .comment-title {
+            font-weight: bold;
+            color: #ffd200;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .ai-error {
+            margin-top: 25px;
+            background: rgba(255, 80, 80, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px 25px;
+            color: #ff8a8a;
+            display: none;
+            border: 1px solid rgba(255, 80, 80, 0.25);
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .ai-error.visible {
+            display: block;
         }
 
         @media (max-width: 768px) {
@@ -310,14 +438,6 @@
 
             .subtitle {
                 font-size: 1em;
-            }
-
-            .config-section {
-                padding: 15px;
-            }
-
-            .config-controls {
-                flex-direction: column;
             }
 
             .audio-sources {
@@ -354,51 +474,36 @@
     <div class="container">
         <div class="header">
             <h1 class="title">🎵 高山族音律融合器</h1>
-            <p class="subtitle">融合音律 · 部落之聲</p>
+            <p class="subtitle">三音和鳴 · 部落之聲</p>
             <div class="tribal-pattern"></div>
-        </div>
-
-        <div class="config-section">
-            <h3 class="config-title">录制设置</h3>
-            <div class="config-controls">
-                <span class="config-label">选择录制音轨数量：</span>
-                <select class="track-select" id="trackCount">
-                    <option value="1">1个音轨</option>
-                    <option value="2">2个音轨</option>
-                    <option value="3" selected>3个音轨</option>
-                </select>
-            </div>
         </div>
 
         <div class="audio-sources">
             <div class="audio-input" id="input1">
                 <h3>音轨一</h3>
                 <div class="file-input-wrapper">
-                    <input type="file" id="file1" accept="audio/*,video/*,.mp3,.wav,.aac,.m4a,.ogg,.flac,.aiff,.alac,.mp4,.mov,.m4v">
+                    <input type="file" id="file1" accept="audio/*">
                     <label for="file1" class="file-label">选择音频</label>
                 </div>
                 <button class="record-btn" data-track="1">🎤 录音</button>
-                <div class="track-status" id="trackStatus1">未加载</div>
             </div>
 
             <div class="audio-input" id="input2">
                 <h3>音轨二</h3>
                 <div class="file-input-wrapper">
-                    <input type="file" id="file2" accept="audio/*,video/*,.mp3,.wav,.aac,.m4a,.ogg,.flac,.aiff,.alac,.mp4,.mov,.m4v">
+                    <input type="file" id="file2" accept="audio/*">
                     <label for="file2" class="file-label">选择音频</label>
                 </div>
                 <button class="record-btn" data-track="2">🎤 录音</button>
-                <div class="track-status" id="trackStatus2">未加载</div>
             </div>
 
             <div class="audio-input" id="input3">
                 <h3>音轨三</h3>
                 <div class="file-input-wrapper">
-                    <input type="file" id="file3" accept="audio/*,video/*,.mp3,.wav,.aac,.m4a,.ogg,.flac,.aiff,.alac,.mp4,.mov,.m4v">
+                    <input type="file" id="file3" accept="audio/*">
                     <label for="file3" class="file-label">选择音频</label>
                 </div>
                 <button class="record-btn" data-track="3">🎤 录音</button>
-                <div class="track-status" id="trackStatus3">未加载</div>
             </div>
         </div>
 
@@ -421,7 +526,27 @@
             <button class="control-btn stop-btn" id="stopBtn">⏹ 停止</button>
         </div>
 
-        <div class="status" id="status">请加载1-3个音频文件或录制音频</div>
+        <div class="status" id="status">请加载三个音频文件或录制音频</div>
+
+        <!-- AI 评分区域 -->
+        <div class="ai-score-section">
+            <button class="ai-score-btn" id="aiScoreBtn">✨ AI 智能评分</button>
+            <div class="ai-score-result" id="aiScoreResult">
+                <div class="score-header">
+                    <h3>🎶 AI 音乐评分报告</h3>
+                    <div class="score-total">
+                        <span class="number" id="totalScore">--</span>
+                        <span class="unit">/ 100</span>
+                    </div>
+                </div>
+                <div class="score-breakdown" id="scoreBreakdown"></div>
+                <div class="score-comment">
+                    <div class="comment-title">📝 AI 点评</div>
+                    <div id="scoreComment">等待评分...</div>
+                </div>
+            </div>
+            <div class="ai-error" id="aiError"></div>
+        </div>
     </div>
 
     <script>
@@ -448,7 +573,6 @@
         const durationEl = document.getElementById('duration');
         const spectrumCanvas = document.getElementById('spectrumCanvas');
         const canvasCtx = spectrumCanvas.getContext('2d');
-        const trackCountSelect = document.getElementById('trackCount');
 
         // 设置canvas尺寸
         function resizeCanvas() {
@@ -458,111 +582,16 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // 根据选择的音轨数量更新界面
-        function updateTrackVisibility() {
-            const trackCount = parseInt(trackCountSelect.value);
-            
-            // 显示/隐藏音轨
-            for (let i = 1; i <= 3; i++) {
-                const trackElement = document.getElementById(`input${i}`);
-                if (i <= trackCount) {
-                    trackElement.style.display = 'block';
-                } else {
-                    trackElement.style.display = 'none';
-                    
-                    // 如果音轨被隐藏，清除其音频缓冲区
-                    if (audioBuffers[i-1]) {
-                        audioBuffers[i-1] = null;
-                        document.getElementById(`trackStatus${i}`).textContent = '未加载';
-                    }
-                }
-            }
-            
-            // 更新状态
-            updateStatus();
-        }
-
-        // 初始化时更新音轨可见性
-        updateTrackVisibility();
-        
-        // 监听音轨数量选择变化
-        trackCountSelect.addEventListener('change', updateTrackVisibility);
-
         // 文件加载
         for (let i = 1; i <= 3; i++) {
             document.getElementById(`file${i}`).addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (file) {
-                    try {
-                        status.textContent = `正在加载音轨${i}...`;
-                        
-                        // 检查文件类型，如果是视频文件，需要特殊处理
-                        let audioBlob = file;
-                        if (file.type.startsWith('video/')) {
-                            // 对于视频文件，我们可以尝试提取音频轨道
-                            status.textContent = `正在从视频文件中提取音频...`;
-                            audioBlob = await extractAudioFromVideo(file);
-                        }
-                        
-                        const arrayBuffer = await audioBlob.arrayBuffer();
-                        audioBuffers[i - 1] = await audioContext.decodeAudioData(arrayBuffer);
-                        document.getElementById(`input${i}`).classList.add('loaded');
-                        document.getElementById(`trackStatus${i}`).textContent = `已加载: ${file.name}`;
-                        updateStatus();
-                    } catch (error) {
-                        console.error('加载音频失败:', error);
-                        status.textContent = `加载音轨${i}失败: ${error.message}`;
-                        
-                        // 如果是解码错误，尝试使用备选方法
-                        if (error.name === 'EncodingError' || error.name === 'NotSupportedError') {
-                            status.textContent = `音轨${i}格式不支持，请尝试其他格式`;
-                        }
-                    }
+                    const arrayBuffer = await file.arrayBuffer();
+                    audioBuffers[i - 1] = await audioContext.decodeAudioData(arrayBuffer);
+                    document.getElementById(`input${i}`).classList.add('loaded');
+                    updateStatus();
                 }
-            });
-        }
-
-        // 从视频文件中提取音频
-        async function extractAudioFromVideo(videoFile) {
-            return new Promise((resolve, reject) => {
-                const video = document.createElement('video');
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const source = audioContext.createMediaElementSource(video);
-                const destination = audioContext.createMediaStreamDestination();
-                
-                source.connect(destination);
-                
-                video.src = URL.createObjectURL(videoFile);
-                video.muted = true; // 静音以避免播放声音
-                
-                // 使用MediaRecorder录制音频
-                const mediaRecorder = new MediaRecorder(destination.stream);
-                const chunks = [];
-                
-                mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) {
-                        chunks.push(e.data);
-                    }
-                };
-                
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(chunks, { type: 'audio/wav' });
-                    URL.revokeObjectURL(video.src);
-                    resolve(blob);
-                };
-                
-                video.onloadedmetadata = () => {
-                    mediaRecorder.start();
-                    video.play().then(() => {
-                        // 播放完成后停止录制
-                        setTimeout(() => {
-                            mediaRecorder.stop();
-                            source.disconnect();
-                        }, video.duration * 1000);
-                    }).catch(reject);
-                };
-                
-                video.onerror = reject;
             });
         }
 
@@ -571,13 +600,6 @@
             btn.addEventListener('click', async () => {
                 const track = parseInt(btn.dataset.track);
                 const index = track - 1;
-                
-                // 检查是否允许录制此音轨
-                const trackCount = parseInt(trackCountSelect.value);
-                if (track > trackCount) {
-                    status.textContent = `当前设置只允许录制${trackCount}个音轨`;
-                    return;
-                }
 
                 if (btn.classList.contains('recording')) {
                     // 停止录音
@@ -587,48 +609,28 @@
                 } else {
                     // 开始录音
                     try {
-                        const stream = await navigator.mediaDevices.getUserMedia({ 
-                            audio: {
-                                echoCancellation: true,
-                                noiseSuppression: true,
-                                sampleRate: 44100,
-                                channelCount: 1
-                            } 
-                        });
-                        mediaRecorders[index] = new MediaRecorder(stream, {
-                            mimeType: 'audio/webm;codecs=opus'
-                        });
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorders[index] = new MediaRecorder(stream);
                         recordingChunks[index] = [];
 
                         mediaRecorders[index].ondataavailable = (e) => {
-                            if (e.data.size > 0) {
-                                recordingChunks[index].push(e.data);
-                            }
+                            recordingChunks[index].push(e.data);
                         };
 
                         mediaRecorders[index].onstop = async () => {
-                            try {
-                                const blob = new Blob(recordingChunks[index], { type: 'audio/webm' });
-                                const arrayBuffer = await blob.arrayBuffer();
-                                audioBuffers[index] = await audioContext.decodeAudioData(arrayBuffer);
-                                document.getElementById(`input${track}`).classList.add('loaded');
-                                document.getElementById(`trackStatus${track}`).textContent = '已加载: 录音';
-                                updateStatus();
-                            } catch (error) {
-                                console.error('处理录音数据失败:', error);
-                                status.textContent = `处理录音数据失败: ${error.message}`;
-                            } finally {
-                                stream.getTracks().forEach(track => track.stop());
-                            }
+                            const blob = new Blob(recordingChunks[index], { type: 'audio/webm' });
+                            const arrayBuffer = await blob.arrayBuffer();
+                            audioBuffers[index] = await audioContext.decodeAudioData(arrayBuffer);
+                            document.getElementById(`input${track}`).classList.add('loaded');
+                            updateStatus();
+                            stream.getTracks().forEach(track => track.stop());
                         };
 
                         mediaRecorders[index].start();
                         btn.textContent = '⏹ 停止录音';
                         btn.classList.add('recording');
-                        status.textContent = `正在录制音轨${track}...`;
                     } catch (err) {
-                        console.error('录音失败:', err);
-                        status.textContent = '无法访问麦克风，请确保已授予录音权限';
+                        status.textContent = '无法访问麦克风';
                     }
                 }
             });
@@ -636,17 +638,16 @@
 
         function updateStatus() {
             const loaded = audioBuffers.filter(b => b !== null).length;
-            if (loaded > 0) {
-                status.textContent = `✓ ${loaded}个音轨已就绪，可以播放`;
+            if (loaded === 3) {
+                status.textContent = '✓ 三个音轨已就绪，可以播放';
                 playBtn.disabled = false;
                 
                 // 更新总时长（使用最长的音频）
-                const maxDuration = Math.max(...audioBuffers.map(b => b ? b.duration : 0));
+                const maxDuration = Math.max(...audioBuffers.map(b => b.duration));
                 durationEl.textContent = formatTime(maxDuration);
             } else {
-                status.textContent = '请加载1-3个音频文件或录制音频';
+                status.textContent = `已加载 ${loaded}/3 个音轨`;
                 playBtn.disabled = true;
-                durationEl.textContent = '00:00';
             }
             
             // 更新频谱显示
@@ -680,6 +681,20 @@
             
             // 为每个已加载的音频创建临时分析器
             loadedBuffers.forEach((buffer, index) => {
+                const offlineContext = new OfflineAudioContext(1, buffer.length, buffer.sampleRate);
+                const source = offlineContext.createBufferSource();
+                const analyserNode = offlineContext.createAnalyser();
+                analyserNode.fftSize = 256;
+                
+                source.buffer = buffer;
+                source.connect(analyserNode);
+                analyserNode.connect(offlineContext.destination);
+                
+                const dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+                
+                // 采样中间部分的频率数据
+                const sampleOffset = Math.floor(buffer.length / 2);
+                
                 // 简化的频谱显示
                 for (let i = 0; i < barCount; i++) {
                     const value = Math.random() * 50 + (index + 1) * 30; // 模拟频谱高度
@@ -776,8 +791,7 @@
         }
 
         playBtn.addEventListener('click', () => {
-            const loadedBuffers = audioBuffers.filter(b => b !== null);
-            if (loadedBuffers.length === 0) return;
+            if (!audioBuffers.every(b => b !== null)) return;
 
             // 恢复AudioContext（某些浏览器需要）
             if (audioContext.state === 'suspended') {
@@ -793,21 +807,19 @@
                 analyser.connect(audioContext.destination);
             }
 
-            // 创建音频源并同时播放（只播放已加载的音轨）
+            // 创建三个音频源并同时播放
             const offset = pauseTime;
             startTime = audioContext.currentTime - offset;
 
             for (let i = 0; i < 3; i++) {
-                if (audioBuffers[i]) {
-                    audioSources[i] = audioContext.createBufferSource();
-                    audioSources[i].buffer = audioBuffers[i];
-                    audioSources[i].connect(gainNode);
-                    audioSources[i].start(0, offset);
-                }
+                audioSources[i] = audioContext.createBufferSource();
+                audioSources[i].buffer = audioBuffers[i];
+                audioSources[i].connect(gainNode);
+                audioSources[i].start(0, offset);
             }
 
             isPlaying = true;
-            status.textContent = `▶ 正在播放 ${loadedBuffers.length} 个音轨...`;
+            status.textContent = '▶ 正在播放...';
             updateProgress();
             drawSpectrum();
         });
@@ -846,8 +858,7 @@
             startTime = 0;
             progressFill.style.width = '0%';
             currentTimeEl.textContent = '00:00';
-            const loadedCount = audioBuffers.filter(b => b !== null).length;
-            status.textContent = `⏹ 已停止 (${loadedCount}个音轨已加载)`;
+            status.textContent = '⏹ 已停止';
             cancelAnimationFrame(animationId);
             cancelAnimationFrame(spectrumAnimationId);
             
@@ -857,12 +868,11 @@
 
         // 进度条点击跳转
         progressBar.addEventListener('click', (e) => {
-            const loadedBuffers = audioBuffers.filter(b => b !== null);
-            if (loadedBuffers.length === 0) return;
+            if (!audioBuffers.every(b => b !== null)) return;
 
             const rect = progressBar.getBoundingClientRect();
             const percent = (e.clientX - rect.left) / rect.width;
-            const maxDuration = Math.max(...loadedBuffers.map(b => b.duration));
+            const maxDuration = Math.max(...audioBuffers.map(b => b.duration));
             
             if (isPlaying) {
                 // 停止当前播放
@@ -877,12 +887,10 @@
                 startTime = audioContext.currentTime - pauseTime;
 
                 for (let i = 0; i < 3; i++) {
-                    if (audioBuffers[i]) {
-                        audioSources[i] = audioContext.createBufferSource();
-                        audioSources[i].buffer = audioBuffers[i];
-                        audioSources[i].connect(gainNode);
-                        audioSources[i].start(0, pauseTime);
-                    }
+                    audioSources[i] = audioContext.createBufferSource();
+                    audioSources[i].buffer = audioBuffers[i];
+                    audioSources[i].connect(gainNode);
+                    audioSources[i].start(0, pauseTime);
                 }
             } else {
                 pauseTime = percent * maxDuration;
@@ -895,8 +903,7 @@
             if (!isPlaying) return;
 
             const currentTime = audioContext.currentTime - startTime;
-            const loadedBuffers = audioBuffers.filter(b => b !== null);
-            const maxDuration = Math.max(...loadedBuffers.map(b => b.duration));
+            const maxDuration = Math.max(...audioBuffers.map(b => b.duration));
             const percent = (currentTime / maxDuration) * 100;
 
             progressFill.style.width = Math.min(percent, 100) + '%';
@@ -921,6 +928,224 @@
         
         // 初始绘制静态频谱
         drawStaticSpectrum();
+
+        // ========== AI 评分功能 ==========
+        const aiScoreBtn = document.getElementById('aiScoreBtn');
+        const aiScoreResult = document.getElementById('aiScoreResult');
+        const aiError = document.getElementById('aiError');
+        const MINIMAX_API_KEY = 'sk-cp-zr9VH_7SDEhajdY1xKc7CuoS_YdnJETumQ5L0Pb14mfpmErnOIpqKWkP7ql8RwxJzilfF3k_n6VKAkOWLKaRIIZ3lPIbM1_lruWlroswpptIXhfEreWcf2Q';
+        const MINIMAX_API_URL = 'https://api.minimaxi.com/v1/chat/completions';
+
+        function getAudioAnalysisInfo() {
+            const info = [];
+            for (let i = 0; i < 3; i++) {
+                if (audioBuffers[i]) {
+                    const buf = audioBuffers[i];
+                    info.push({
+                        track: i + 1,
+                        duration: buf.duration.toFixed(2),
+                        sampleRate: buf.sampleRate,
+                        numberOfChannels: buf.numberOfChannels,
+                        length: buf.length
+                    });
+                }
+            }
+            return info;
+        }
+
+        function getFrequencySnapshot() {
+            if (!analyser || !isPlaying) return null;
+            const data = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(data);
+            // 采样关键频段：低频(0-20)、中频(20-60)、高频(60-128)
+            const low = data.slice(0, 20).reduce((a, b) => a + b, 0) / 20;
+            const mid = data.slice(20, 60).reduce((a, b) => a + b, 0) / 40;
+            const high = data.slice(60, 128).reduce((a, b) => a + b, 0) / 68;
+            return { low: Math.round(low), mid: Math.round(mid), high: Math.round(high) };
+        }
+
+        aiScoreBtn.addEventListener('click', async () => {
+            const loadedCount = audioBuffers.filter(b => b !== null).length;
+            if (loadedCount === 0) {
+                showError('请先加载至少一个音频文件再进行评分');
+                return;
+            }
+
+            // 切换加载状态
+            aiScoreBtn.disabled = true;
+            aiScoreBtn.classList.add('loading');
+            aiScoreBtn.textContent = '⏳ AI 正在分析中...';
+            aiScoreResult.classList.remove('visible');
+            aiError.classList.remove('visible');
+
+            try {
+                const tracksInfo = getAudioAnalysisInfo();
+                const freqData = getFrequencySnapshot();
+
+                const systemPrompt = `你是一位专业的民族音乐学家和音乐评分专家，精通高山族传统音乐。你需要根据用户提供的音频信息进行专业评分。
+评分维度（每项0-100分）：
+1. 音质清晰度 - 音频采样率、声道数等客观指标
+2. 和声融合度 - 多轨音频的协调性与融合潜力
+3. 民族韵味 - 高山族音乐特色的体现程度
+4. 节奏韵律 - 音乐的节奏感和韵律表现
+5. 整体表现力 - 综合音乐表现力
+
+请严格按照以下JSON格式回复，不要添加任何其他文字：
+{
+  "scores": {
+    "音质清晰度": <0-100>,
+    "和声融合度": <0-100>,
+    "民族韵味": <0-100>,
+    "节奏韵律": <0-100>,
+    "整体表现力": <0-100>
+  },
+  "total": <0-100的加权总分>,
+  "comment": "<一段100字以内的专业点评，包含优点和改进建议>"
+}`;
+
+                const userContent = `请对以下高山族音乐融合作品进行评分：
+音轨信息：${JSON.stringify(tracksInfo, null, 2)}
+已加载音轨数：${loadedCount}/3
+${freqData ? `实时频谱数据 - 低频能量: ${freqData.low}, 中频能量: ${freqData.mid}, 高频能量: ${freqData.high}` : '（当前未在播放，无实时频谱数据）'}
+播放状态：${isPlaying ? '播放中' : '未播放'}`;
+
+                const response = await fetch(MINIMAX_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${MINIMAX_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'MiniMax-M3',
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userContent }
+                        ],
+                        thinking: { type: 'disabled' },
+                        temperature: 0.7,
+                        max_completion_tokens: 1024
+                    })
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`API 请求失败 (${response.status}): ${errText}`);
+                }
+
+                const data = await response.json();
+                console.log('MiniMax API 完整响应:', JSON.stringify(data, null, 2));
+
+                // 兼容多种返回格式
+                let content = data.choices?.[0]?.message?.content
+                    || data.reply || data.content || data.output?.text;
+
+                if (!content) {
+                    throw new Error('API 返回内容为空，原始响应: ' + JSON.stringify(data).slice(0, 300));
+                }
+
+                // 去除 MiniMax-M3 thinking 内容 <think>...</think>
+                content = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+                console.log('AI 返回原始内容:', content);
+
+                // 解析JSON - 多层容错处理
+                let result;
+                try {
+                    // 1. 尝试直接解析
+                    result = JSON.parse(content);
+                } catch {
+                    // 2. 去除 markdown 代码块包裹 ```json ... ```
+                    const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+                    if (codeBlockMatch) {
+                        try {
+                            result = JSON.parse(codeBlockMatch[1].trim());
+                        } catch {}
+                    }
+                    // 3. 提取最外层花括号内容
+                    if (!result) {
+                        const jsonMatch = content.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) {
+                            try {
+                                result = JSON.parse(jsonMatch[0]);
+                            } catch {}
+                        }
+                    }
+                    // 4. 逐步去掉外层非JSON字符重试
+                    if (!result) {
+                        let cleaned = content.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
+                        try {
+                            result = JSON.parse(cleaned);
+                        } catch {
+                            throw new Error('无法解析AI返回的评分数据，原始内容: ' + content.slice(0, 200));
+                        }
+                    }
+                }
+
+                renderScoreResult(result);
+
+            } catch (err) {
+                console.error('AI评分失败:', err);
+                showError(`AI 评分失败：${err.message}`);
+            } finally {
+                aiScoreBtn.disabled = false;
+                aiScoreBtn.classList.remove('loading');
+                aiScoreBtn.textContent = '✨ AI 智能评分';
+            }
+        });
+
+        const SCORE_COLORS = [
+            'linear-gradient(90deg, #667eea, #764ba2)',
+            'linear-gradient(90deg, #f093fb, #f5576c)',
+            'linear-gradient(90deg, #4facfe, #00f2fe)',
+            'linear-gradient(90deg, #43e97b, #38f9d7)',
+            'linear-gradient(90deg, #fa709a, #fee140)'
+        ];
+
+        function renderScoreResult(result) {
+            const { scores, total, comment } = result;
+
+            // 总分
+            document.getElementById('totalScore').textContent = total || '--';
+
+            // 分项评分
+            const breakdown = document.getElementById('scoreBreakdown');
+            breakdown.innerHTML = '';
+
+            const scoreEntries = Object.entries(scores || {});
+            scoreEntries.forEach(([label, value], index) => {
+                const item = document.createElement('div');
+                item.className = 'score-item';
+                item.innerHTML = `
+                    <div class="label">${label}</div>
+                    <div class="value">${value}</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" style="width: 0%; background: ${SCORE_COLORS[index % SCORE_COLORS.length]}"></div>
+                    </div>
+                `;
+                breakdown.appendChild(item);
+
+                // 延迟动画
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        item.querySelector('.bar-fill').style.width = value + '%';
+                    }, 100 + index * 120);
+                });
+            });
+
+            // 点评
+            document.getElementById('scoreComment').textContent = comment || '暂无点评';
+
+            // 显示结果
+            aiScoreResult.classList.add('visible');
+            aiScoreResult.style.animation = 'none';
+            aiScoreResult.offsetHeight; // 触发重排
+            aiScoreResult.style.animation = '';
+        }
+
+        function showError(message) {
+            aiError.textContent = message;
+            aiError.classList.add('visible');
+        }
     </script>
 </body>
 </html>
